@@ -18,15 +18,16 @@ Verify:
 
 Outputs:
 
-Byom-->k get pods -n argocd
-     NAME                                                READY   STATUS    RESTARTS   AGE
-     argocd-application-controller-0                     1/1     Running   0          29s
-     argocd-applicationset-controller-7c7cd47f9d-h8lnr   1/1     Running   0          29s
-     argocd-dex-server-6698896998-7hvqs                  1/1     Running   0          29s
-     argocd-notifications-controller-644457c445-qf9z7    1/1     Running   0          29s
-     argocd-redis-6bcd6966f-skwml                        1/1     Running   0          29s
-     argocd-repo-server-6f6657d5cb-wtvfg                 1/1     Running   0          29s
-     argocd-server-664495b675-k9d98                      1/1     Running   0          29s
+     Byom-->k get pods -n argocd
+
+      NAME                                                READY   STATUS    RESTARTS   AGE
+      argocd-application-controller-0                     1/1     Running   0          29s
+      argocd-applicationset-controller-7c7cd47f9d-h8lnr   1/1     Running   0          29s
+      argocd-dex-server-6698896998-7hvqs                  1/1     Running   0          29s
+      argocd-notifications-controller-644457c445-qf9z7    1/1     Running   0          29s
+      argocd-redis-6bcd6966f-skwml                        1/1     Running   0          29s
+      argocd-repo-server-6f6657d5cb-wtvfg                 1/1     Running   0          29s
+      argocd-server-664495b675-k9d98                      1/1     Running   0          29s
 
 For local testing, expose the UI with port-forwarding:
 
@@ -39,6 +40,7 @@ Open
 Get the Argo CD admin password
 
         argocd admin initial-password -n argocd  # It does not work for me because argocd tool was not installed
+        brew install argocd  # Tried next time but the below kubectl commands worked for me
 
         kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo       # It worked for me
 
@@ -46,3 +48,147 @@ Log in to the UI with:
 
      Username: admin
      Password: <output from the command>
+
+
+Then change the password:
+
+     argocd login localhost:8080      # This is require if you wanted to see application status via argocd CLI - Its useful
+     argocd account update-password
+
+Current File Structure 
+
+     argocd-chota-demo/
+     ├── argocd-app.yaml       <-- here
+     ├── readme.md
+     ├── steps_followed.md
+     └── apps/
+         └── demo-app/
+             ├── deployment.yaml
+             └── service.yaml
+
+
+Nginx Deployment File:
+
+File: deployment.yaml
+
+     apiVersion: apps/v1
+     kind: Deployment
+     metadata:
+       name: demo-app
+       labels:
+         app: demo-app
+     spec:
+       replicas: 2
+       selector:
+         matchLabels:
+           app: demo-app
+       template:
+         metadata:
+           labels:
+             app: demo-app
+         spec:
+           containers:
+             - name: demo-app
+               image: nginx:1.27
+               ports:
+                 - containerPort: 80
+
+Nginx Service File
+
+File: service.yaml
+
+     apiVersion: v1
+     kind: Service
+     metadata:
+       name: demo-app
+       labels:
+         app: demo-app
+     spec:
+       type: ClusterIP
+       selector:
+         app: demo-app
+       ports:
+         - name: http
+           port: 80
+           targetPort: 80
+
+
+ArgoCD Application YAML file
+
+File: argocd-app.yaml
+
+     apiVersion: argoproj.io/v1alpha1
+     kind: Application
+     metadata:
+       name: demo-app
+       namespace: argocd
+     spec:
+       project: default
+       source:
+         repoURL: https://github.com/byomkesh99/argocd-chota-demo.git
+         targetRevision: main
+         path: apps/demo-app
+       destination:
+         server: https://kubernetes.default.svc
+         namespace: demo
+       syncPolicy:
+         syncOptions:
+           - CreateNamespace=true
+
+
+PUSH everything into your GIT Repo
+
+      git init
+      git add .
+      git commit -m "Initial Argo CD demo app"
+      git branch -M main
+      git remote add origin https://github.com/byomkesh99/argocd-mini-demo.git
+      git push -u origin-argocd main     # I have multiple origin
+
+
+NOW apply ArgoCD Application kubernetes file
+
+     kubectl apply -n argocd -f argocd-app.yaml
+
+Argo CD will now show the application as OutOfSync, because the resources exist in Git but have not yet been deployed to the cluster.
+
+Sync manually
+  In the Argo CD UI:
+   Open Applications.
+   Click demo-app.
+   Click Sync.
+   Click Synchronize.
+   Or use the CLI:
+
+      argocd app sync demo-app
+
+If the "argocd" cli command does not work try the following "kubectl" command to check the application status
+
+      kubectl get applications -n argocd
+
+You should see:
+
+     NAME       SYNC STATUS   HEALTH STATUS
+     demo-app   OutOfSync     Missing
+
+Check the result
+
+     kubectl get pods -n demo
+     kubectl get svc -n demo
+
+Since I am  using kind-cluster, expose the Argo CD server with port-forwarding:
+
+     kubectl port-forward svc/argocd-server -n argocd 8080:443
+
+Keep that terminal open. In another terminal, log in:
+
+     argocd login localhost:8080 --username admin --insecure
+
+When prompted, use the initial admin password:
+
+      argocd admin initial-password -n argocd
+
+Then check the app:
+
+      argocd app list
+      argocd app get demo-app
