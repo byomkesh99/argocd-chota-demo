@@ -135,6 +135,17 @@ File: argocd-app.yaml
          syncOptions:
            - CreateNamespace=true
 
+### IMPORTANT
+
+If you wanted to Enable automatic sync
+Update argocd-app.yaml:
+
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
 
 PUSH everything into your GIT Repo
 
@@ -144,7 +155,6 @@ PUSH everything into your GIT Repo
       git branch -M main
       git remote add origin https://github.com/byomkesh99/argocd-mini-demo.git
       git push -u origin-argocd main     # I have multiple origin
-
 
 NOW apply ArgoCD Application kubernetes file
 
@@ -192,3 +202,40 @@ Then check the app:
 
       argocd app list
       argocd app get demo-app
+
+To roll back to the previous Git revision:
+
+     argocd app history demo-app
+     
+     Output:
+     SOURCE  https://github.com/byomkesh99/argocd-chota-demo.git
+     ID      DATE                            REVISION
+     0       2026-10-13 16:54:02 +0200 CEST  main (f990d65)
+     1       2026-10-13 16:59:57 +0200 CEST  main (f990d65)
+     2       2026-10-13 17:53:04 +0200 CEST  main (b46b57c)
+     3       2026-10-13 18:04:08 +0200 CEST  main (b46b57c)
+     
+     argocd app rollback demo-app <previous-deployment-id>   # Id from the aboube output
+
+
+Health Checks: Confirm it is healthy
+
+      kubectl get pods -n demo
+      kubectl get deployment demo-app -n demo
+      kubectl get svc demo-app -n demo
+      argocd app get demo-app
+
+      # One of the output
+      Health Status: Progressing
+      To
+      Health Status: Healthy
+
+Access the app locally --
+Your Service is ClusterIP, so it is not exposed outside the cluster. For a quick local test, run:
+
+      kubectl port-forward svc/demo-app -n demo 8081:80
+
+Then open in Browser:
+
+      http://localhost:8081
+
