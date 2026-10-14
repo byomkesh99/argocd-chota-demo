@@ -80,3 +80,72 @@ File: argocd-vm-inventory.yaml
          syncOptions:
            - CreateNamespace=true
 
+Push all the newly created files to Github repo.
+
+Then Apply It.
+
+        kubectl apply -n argocd -f argocd-vm-inventory.yaml
+
+Then sync:
+
+        argocd app sync vm-inventory
+
+Verify the deployment and the services
+
+      kubectl get pods -n vm-inventory
+      kubectl get svc -n vm-inventory
+      kubectl get pvc -n vm-inventory
+      argocd app get vm-inventory
+
+Test the API
+ Use port-forwarding:
+
+        kubectl port-forward svc/vm-backend -n vm-inventory 3000:3000
+
+In another terminal, test health:
+
+        curl http://localhost:3000/healthz
+
+        OUTPUT:
+        {"status":"ok"}
+
+Now tried to push some data with POST Curl command and see the details:
+
+      curl -X POST http://localhost:3000/api/vms \
+        -H "Content-Type: application/json" \
+        -d '{
+          "vm_name": "test-vm-01",
+          "ip_address": "10.0.0.10",
+          "environment": "dev",
+          "application_name": "demo-app",
+          "comment": "First test VM"
+        }'
+
+Display the VM details:
+
+        curl http://localhost:3000/api/vms
+
+        OUTPUT:
+        [{"id":1,"vm_name":"test-vm-01","ip_address":"10.0.0.10","environment":"dev","application_name":"demo-app","comment":"First test VM","created_at":"2026-10-14T10:53:13.056Z"}]% 
+
+
+For Frontend we are using React JS
+
+Installation - Here is the installation Path: ....Kubernetes/practice/vm-inventory/
+
+      npm create vite@latest frontend -- --template react
+      cd frontend
+      npm install
+
+Folder structure look like
+
+      vm-inventory/
+      ├── backend/
+      └── frontend/
+          ├── src/
+          ├── index.html
+          ├── package.json
+          ├── vite.config.js
+          ├── Dockerfile
+          └── nginx.conf
+

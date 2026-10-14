@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vm-frontend
+  namespace: vm-inventory
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vm-frontend
+  template:
+    metadata:
+      labels:
+        app: vm-frontend
+    spec:
+      containers:
+        - name: vm-frontend
+          image: byomkesh99/vm-inventory-frontend:1.0.0
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
