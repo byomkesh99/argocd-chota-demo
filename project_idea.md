@@ -129,7 +129,7 @@ Display the VM details:
         [{"id":1,"vm_name":"test-vm-01","ip_address":"10.0.0.10","environment":"dev","application_name":"demo-app","comment":"First test VM","created_at":"2026-10-14T10:53:13.056Z"}]% 
 
 
-For Frontend we are using React JS
+## For Frontend we are using React JS
 
 Installation - Here is the installation Path: ....Kubernetes/practice/vm-inventory/
 
@@ -148,4 +148,47 @@ Folder structure look like
           ├── vite.config.js
           ├── Dockerfile
           └── nginx.conf
+
+All the above file exist in the Github repo. Along with that.
+
+Few notes - 1) src/App.jsx file replaced from default conf file 2) src/App.css file replaced with default conf file. 3) frontend/Dockerfile file created for Nginx reverse proxy purpose.
+
+Created frontend/.dockerignore with the followings
+
+      node_modules
+      dist
+      .git
+
+Docker build and pushed for nginx to run from container:
+
+      docker build -t byomkesh99/vm-inventory-frontend:1.0.0 .
+      docker push byomkesh99/vm-inventory-frontend:1.0.0
+
+Then added  Kubernetes manifests
+
+      /apps/vm-inventory/07-frontend-deployment.yaml
+      /apps/vm-inventory/08-frontend-service.yaml
+
+Pushed everything to Github
+
+     cd <ArgoCD Folder>
+     git add .
+     git commit -m "Add React frontend for VM inventory"
+     git push origin-argocd main
+
+Refresh SYNC
+
+     argocd app get vm-inventory
+     argocd app sync vm-inventory
+
+To Open the website - Use port-forwarding:
+
+     kubectl port-forward svc/vm-frontend -n vm-inventory 8082:80
+
+     And then Open the following link on Browser
+     http://localhost:8082
+
+As of now THIS IS OUR WORKFLOW
+
+     Browser → React UI → nginx → Express API → PostgreSQL
 
