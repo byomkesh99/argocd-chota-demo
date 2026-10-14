@@ -239,3 +239,15 @@ Then open in Browser:
 
       http://localhost:8081
 
+## We need to implement the following Possible next exercises
+
+* Dev/staging/prod environments using Kustomize base + overlays.
+* Automatic sync and self-healing for each environment.
+* App of Apps pattern to manage multiple applications from one parent Application.
+* Private Git repository integration
+* RBAC and Argo CD Projects to restrict which teams can deploy where.
+* Secrets management using Sealed Secrets, External Secrets Operator, or Vault.
+* Progressive delivery using Argo Rollouts.
+* Notifications to Slack, email, or webhook when sync or health changes.
+
+## Extending this project - check document - project_idea.md file

@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vm-inventory
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/byomkesh99/argocd-chota-demo.git
+    targetRevision: main
+    path: apps/vm-inventory
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vm-inventory
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
