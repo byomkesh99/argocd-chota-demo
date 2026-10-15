@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vm-backend
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  selector:
+    app: vm-backend
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000

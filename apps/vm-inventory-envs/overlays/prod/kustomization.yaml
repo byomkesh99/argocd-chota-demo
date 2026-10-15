@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: vm-inventory-prod
+
+resources:
+  - ../../base
+  - namespace.yaml
+
+replicas:
+  - name: vm-backend
+    count: 2
+  - name: vm-frontend
+    count: 2

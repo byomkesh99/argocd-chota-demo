@@ -192,3 +192,25 @@ As of now THIS IS OUR WORKFLOW
 
      Browser → React UI → nginx → Express API → PostgreSQL
 
+So, we are aboe access https://argocd.local/ and http://vm-inventory.local/ perfectly.
+
+Next, our mission to implement Kustomize overlay and separate Dev and Prod env. Dev will be in Dev Kind Cluster and Prod will be in Prod Kind cluster.
+
+By intacting old configuration here we will do the modification.
+
+apps/
+├── vm-inventory/               # Existing working application—unchanged
+└── vm-inventory-envs/          # New Kustomize configuration
+    ├── base/
+    └── overlays/
+        ├── dev/
+        └── prod/
+
+Planned ENV:
+
+| Environment        | Cluster      | Namespace         |
+| ------------------ | ------------ | ----------------- |
+| Existing baseline  | kind-kind    | vm-inventory      |
+| New dev            | kind-kind    | vm-inventory-dev  |
+| New simulated prod | kind-vm-prod | vm-inventory-prod |
+
