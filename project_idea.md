@@ -198,13 +198,13 @@ Next, our mission to implement Kustomize overlay and separate Dev and Prod env. 
 
 By intacting old configuration here we will do the modification.
 
-apps/
-├── vm-inventory/               # Existing working application—unchanged
-└── vm-inventory-envs/          # New Kustomize configuration
-    ├── base/
-    └── overlays/
-        ├── dev/
-        └── prod/
+      apps/
+      ├── vm-inventory/               # Existing working application—unchanged
+      └── vm-inventory-envs/          # New Kustomize configuration
+          ├── base/
+          └── overlays/
+              ├── dev/
+              └── prod/
 
 Planned ENV:
 
@@ -214,3 +214,89 @@ Planned ENV:
 | New dev            | kind-kind    | vm-inventory-dev  |
 | New simulated prod | kind-vm-prod | vm-inventory-prod |
 
+
+Each overlay should render:
+
+* One Namespace.
+* One Secret.
+* Two ConfigMaps: database initialization and nginx.
+* One PostgreSQL StatefulSet.
+* Two Deployments.
+* Three Services.
+
+We are using GatewayAPI instead of Ingress, here is our plan
+
+      infrastructure/
+      └── gateway/
+          └── ...controller and shared gateway configuration...
+      
+      apps/vm-inventory-envs/
+      ├── base/
+      └── overlays/
+          ├── dev/
+          │   └── httproute.yaml
+          └── prod/
+              └── httproute.yaml
+
+
+* Gateway API CRDs.
+* Envoy Gateway CRDs and the controller.
+
+      helm install eg \
+        oci://docker.io/envoyproxy/gateway-helm \
+        --version v1.9.2 \
+        --namespace envoy-gateway-system \
+        --create-namespace \
+        --kube-context kind-kind \
+        --wait \
+        --timeout 5m
+
+Verify the controller (foe kind-kind cluster i.e. Dev Cluster)
+
+     kubectl --context kind-kind \
+       -n envoy-gateway-system \
+       get deployments,pods,svc
+
+Check Controller
+
+     kubectl --context kind-kind \
+       -n envoy-gateway-system \
+       wait deployment/envoy-gateway \
+       --for=condition=Available \
+       --timeout=300s
+
+Verify the API definitions
+
+     kubectl --context kind-kind get crd \
+       gatewayclasses.gateway.networking.k8s.io \
+       gateways.gateway.networking.k8s.io \
+       httproutes.gateway.networking.k8s.io \
+       envoyproxies.gateway.envoyproxy.io
+
+Then 
+
+     helm list \
+       --namespace envoy-gateway-system \
+       --kube-context kind-kind
+
+
+This is how Gateway-API will flow
+
+     GatewayClass
+         │
+         ▼
+     Dev Gateway
+         │
+         ▼
+     Dev HTTPRoute
+         │
+         ▼
+     vm-frontend Service in vm-inventory-dev
+
+
+The following files created and they are in Github repo
+
+     infrastructure/gateway/dev/
+     ├── gatewayclass.yaml
+     ├── envoyproxy.yaml
+     └── gateway.yaml
