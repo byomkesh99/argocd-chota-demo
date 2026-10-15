@@ -1,5 +1,25 @@
 # Mini Project Idea
 
+
+[
+
+OLD DEV - http://vm-inventory.local/  (with. Ingress)
+
+
+ENVOY_SERVICE=$(kubectl --context kind-kind \
+  -n envoy-gateway-system \
+  get svc \
+  -l gateway.envoyproxy.io/owning-gateway-name=vm-dev-gateway \
+  -o jsonpath='{.items[0].metadata.name}')
+
+  kubectl --context kind-kind \
+  -n envoy-gateway-system \
+  port-forward "svc/$ENVOY_SERVICE" 8085:80
+
+  Dev URL Access : http://vm-inventory-dev.local:8085/
+
+]
+
 Project Description: 
 I would like use 2 or 4 page tabbed website where I will be filling form of VM details and in the other tab I will see the VM details. lets take 5 field form 1) VM name 2) Ip address 3) Environment 4) Application name 5) Any comment . Thats it.
 
@@ -300,3 +320,4 @@ The following files created and they are in Github repo
      ├── gatewayclass.yaml
      ├── envoyproxy.yaml
      └── gateway.yaml
+

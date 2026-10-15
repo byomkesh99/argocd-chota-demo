@@ -1,0 +1,25 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: vm-prod-gateway
+  namespace: envoy-gateway-system
+spec:
+  gatewayClassName: envoy
+
+  infrastructure:
+    parametersRef:
+      group: gateway.envoyproxy.io
+      kind: EnvoyProxy
+      name: vm-prod-proxy
+
+  listeners:
+    - name: http
+      protocol: HTTP
+      port: 80
+      hostname: vm-inventory-prod.local
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              kubernetes.io/metadata.name: vm-inventory-prod

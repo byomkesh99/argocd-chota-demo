@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vm-inventory-prod
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/byomkesh99/argocd-chota-demo.git
+    targetRevision: main
+    path: apps/vm-inventory-envs/overlays/prod
+
+  destination:
+    server: https://vm-prod-control-plane:6443
+    namespace: vm-inventory-prod
+
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
